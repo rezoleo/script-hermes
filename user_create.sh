@@ -242,4 +242,10 @@ echo "Execution..."
 "${commande1[@]}"
 "${commande2[@]}"
 
+chown root "$hom"
+chmod go-w "$hom"
+mkdir "$hom"/writable
+chown "$login":"$group" "$hom"/writable
+chmod ug+rwX "$hom"/writable
+
 echo " * Fin * "
