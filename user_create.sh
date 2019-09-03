@@ -1,15 +1,12 @@
-#!/bin/bash bash
+#!/usr/bin/env bash
 
 # script de création de compte pour Hermes
 # reprend les fonctionnalités du script de Eclip2
-# ouvre le compte, trouve le bon id, mets les valeurs de validité, ouvre le compte mysql
+# ouvre le compte, trouve le bon id, mets les valeurs de validité
 # rewritten from scratch.
 
 # v2.0
 # Alban 'Haran', Thomas 'Nymous' (copyright : licence GPL)
-
-#### REMARQUE : utiliser le chroot de scponly ? https://github.com/scponly/scponly/wiki/Install
-#### REMARQUE : utiliser à la place le ChrootDirectory de OpenSSH ? (avec %h pour utiliser le home de l'utilisateur https://linux.die.net/man/5/sshd_config)
 
 
 # Type de compte à ouvrir
