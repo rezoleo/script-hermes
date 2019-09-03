@@ -117,49 +117,11 @@ case $type_compte in
 		description="Divers $description"
 esac
 
-#echo -n "Compte shell o/[n] ? "
-#read -r shel
-#if [ -z $shel ]; then
-#	shel="/usr/bin/scponly"
-#elif [ $shel = "n" ]; then
-#	shel="/usr/bin/scponly"
-#else
-#	shel="/bin/bash"
-#fi
-# Scponly est obsolète. 
-
-
 # DÉSACTIVÉ, on ne donne que des comptes SFTP (Nymous, 2019)
-shel="/usr/bin/false" 
-# Remarque : une version plus user friendly serait :
-# shel="/usr/sbin/nologin"
+shel="/usr/sbin/nologin" 
 
-#compte mysql ?
-# DÉSACTIVÉ, on ne donne que des comptes SFTP (Nymous, 2019)
-
-#echo -n "Compte MySQL [o]/n ? "
-#read -r mysql
-
-## la gestion des mots de passe du compte
-#echo -n "Entrer un mot de passe (sinon, choix automatique) o/[n] ? "
-#read pass
-
-## on genere le pass mysql
-#pass_mysql=$(pwgen -1)
-#
-## $$$ ca existe les || en shell ?
-#if [ -z $pass ]; then
-#	pass=$(pwgen -1)
-#elif [ $shel = "n" ]; then
-#	pass=$(pwgen -1)
-#else
-#	echo "Il faudra entrer le mot de passe à la toute fin..."
-#	pass_to_enter="yes"
-#fi
-
-# Finalement, on ne laisse pas la possibilité de choisir le mot de passe.
-# Reste à savoir quels paramètres on va mettre
-pass=$(pwgen -c -n -1)
+# On génère le mot de passe (--capitalize inclut au moins une lettre majuscule, --numerals inclut au moins un chiffre, -1 affiche un mot de passe par ligne).
+pass=$(pwgen --capitalize --numerals -1)
 
 ##########################
 # traite les informations
@@ -174,54 +136,8 @@ case $type_compte in
 	;;
 esac
 
-## NOTA : ICI on aurait pu utiliser des options de useradd pour trouver le bon id plutot que de bourriner comme ca !
-## deja ca le fait alors bon on va pas se plaindre :)
-## On va utiliser `adduser --firstuid XXX --lastuid XXX`
-## cherche le userid
-#
-#case $type_compte in
-#	1)
-#		#recuperer le userid de la derniere assoce
-#		lastid=$(($(grep ":x:130" /etc/passwd | awk -F ":" '{print $3 }' | sort | tail -n 1) +1))
-#		min=13000
-#	;;
-#	2)
-#		#dernier commiss
-#		lastid=$(($(grep ":x:131" /etc/passwd | awk -F ":" '{print $3 }' | sort | tail -n 1)+1))
-#		min=13100
-#	;;
-#	3)
-#		#dernier club
-#		lastid=$(($(grep ":x:132" /etc/passwd | awk -F ":" '{print $3 }' | sort | tail -n 1)+1))
-#		min=13200
-#	;;
-#	4 | 5 | 7 )
-#		patt=$((1400+$annee_strip))
-#		#dernier club
-#		lastid=$(($(grep ":x:$patt" /etc/passwd | awk -F ":" '{print $3 }' | sort | tail -n 1)+1))
-#		min=$((patt*100))
-#		echo "id min : $min"
-#	;;
-#	6)
-#		patt=$((200+$promo-2000))
-#		#dernier club
-#		lastid=$(($(grep ":x:$patt" /etc/passwd | awk -F ":" '{print $3 }' | sort | tail -n 1)+1))
-#		min=$((patt*100))
-#		echo "id min : $min"
-#	;;
-#	8)
-#		#dernier compte de type "divers"
-#		lastid=$(($(grep ":x:150" /etc/passwd | awk -F ":" '{print $3 }' | sort | tail -n 1)+1))
-#		min=15000
-#esac
-#
-##verif du uid
-#if [ $((lastid))  -lt $min ]; then
-#	lastid=$min
-#fi
-## effectue une recherche dans les uid !
 
-#Calcul des range des userid possibles en fonction du type de compte
+# Calcul des range des userid possibles en fonction du type de compte
 case $type_compte in
 	1)
 		#association
@@ -264,7 +180,7 @@ case $type_compte in
         lastuid=19999
 esac
 
-# CALCUL DE LA DATE d'expiration
+# Calcul de la date d'expiration
 case $type_compte in
 	# assoc, comm, club, divers : date actuelle + 1 an
 	1 | 2 | 3 | 8)
@@ -284,7 +200,6 @@ case $type_compte in
 		date_expir=$((2000+"$annee_strip"+1))-01-01
 esac
 
-#echo "uid possible : $lastid"
 ###################################
 # récapitule et demande confirmation
 ####################################
@@ -294,26 +209,14 @@ echo "| RECAPITULATIF"
 echo "|------------------------------------------------"
 echo "| Login : 	$login"
 echo "| Password :	$pass"
-#echo "| Password sql:	"$pass_mysql""
 echo "|"
 echo "| Type de compte : $type_compte"
 echo "| Description :	${description}"
-#echo "| Uid :		$lastid"
 echo "| Home :  	$hom"
 echo "| Shell : 	$shel"
-#DÉSACTIVÉ (Haran,2019) 
-#echo "| MySQL :		$mysql"
 echo "| Expiration :	$date_expir"
 echo " ------------------------------------------------"
 echo
-
-######################
-# effectue la demande
-#####################
-#Ajouter -g users
-#cryptpass=$(mkpasswd "$pass")
-#commande="-c \"$description\" -d \"$hom\" -s $shel -e $date_expir -m -p $cryptpass -u $lastid -g 100 \"$login\""
-#commande="$commande -p $cryptpass"
 
 # Aller voir le fichier /etc/adduser.conf : variables d'intérêt :
 # NAME_REGEX (forme du login)
@@ -321,13 +224,6 @@ echo
 #Il n'existe pas de paramètre pour la date d'expiration et la description avec adduser du coup, on fait ça en trois fois.
 commande1=(adduser ${login} --shell ${shel} --home ${hom} --firstuid ${firstuid} --lastuid ${lastuid} --ingroup ${group} --disabled-password --gecos "${login},,,")
 commande2=(usermod -e ${date_expir} -c "${description}" -p ${pass} ${login})
-
-#si le pass est deja mis ou pas
-#if [ -n $pass ]; then
-#	commande="$commande -p \"$pass\""
-#fi
-#commande="$commande $login"
-#echo $commande
 
 # Validation de la commande
 echo "Les commandes qui vont être exécutées sont :"
@@ -346,44 +242,4 @@ echo "Execution..."
 "${commande1[@]}"
 "${commande2[@]}"
 
-#useradd -c "$description" -d $hom -s $shel -e $date_expir -m -p $cryptpass -u $lastid -g 100 $login
-# -m permet de créer directement le répertoire du user
-
-#adduser ${login} --shell ${shel} --home ${hom} --firstuid ${firstuid} --lastuid ${lastuid}
-#chage -E ${date_expir} ${login}
-#usermod ${login} -c \"$description\" -p ${pass}
-
-
-#setquota -u $login 370000 390000 0 0 /home
-#edquota -p quota "$login"		#copie la conf quota de l'user quota pour attribuer les quotas à login
-
-
-#if [[ "$pass_to_enter" = "yes" ]]; then
-#	echo "Vous devez entrer votre password maintenant (méthode sécurisée) :"
-#	passwd $login
-#fi
-
-
-# Mise en place des droits (pensez à la présence du dossier public_html dans /etc/skel/)
-# Est-ce qu'on a encore besoin de ça ?
-#chown -R "$login":www-data "$hom"/public_html
-#chmod 750 "$hom"/public_html
-#chmod g+s "$hom"/public_html
-#chmod 700 "$hom"/sessions
-#chmod 750 "$hom"
-echo
-
-# Ajout du compte SAMBA
-# Améliorations futures
-#echo -ne "$pass\n$pass\n" | smbpasswd -a -s "$login"
-
-# DÉSACTIVÉ (Haran,2019)
-#echo "Traitement de la demande Mysql : "
-#if [[ -z "$mysql" || "$mysql" = "o" ]]; then
-#	echo "Traitement de la demande Mysql : "
-#	echo "On crée un compte : base/compte/pass == $login/$login/$pass_mysql"
-#	/root/scripts/admin/eclip2_open_mysql "$login" "$login" "$pass_mysql"
-#else
-#	echo "Aucune demande de compte MySQL"
-#fi
 echo " * Fin * "
