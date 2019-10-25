@@ -220,7 +220,7 @@ echo
 # QUOTAUSER (instaure la même conf de quota que l'utilisateur QUOTAUSER)
 #Il n'existe pas de paramètre pour la date d'expiration et la description avec adduser du coup, on fait ça en trois fois.
 commande1=(adduser ${login} --shell ${shel} --home ${hom} --firstuid ${firstuid} --lastuid ${lastuid} --ingroup ${group} --disabled-password --gecos "${login},,,")
-commande2=(usermod -e ${date_expir} -c "${description}" -p ${pass} ${login})
+commande2=(usermod -e ${date_expir} -c '"'"'${description}'"'"' -p ${pass} ${login})
 
 # Validation de la commande
 echo "Les commandes qui vont être exécutées sont :"
