@@ -215,12 +215,15 @@ echo "| Expiration :	$date_expir"
 echo " ------------------------------------------------"
 echo
 
+typeset SALT="Q9"
+typeset HASH=$(perl -e "print crypt(${pass},${SALT})")
+
 # Aller voir le fichier /etc/adduser.conf : variables d'intérêt :
 # NAME_REGEX (forme du login)
 # QUOTAUSER (instaure la même conf de quota que l'utilisateur QUOTAUSER)
 #Il n'existe pas de paramètre pour la date d'expiration et la description avec adduser du coup, on fait ça en trois fois.
-commande1=(adduser ${login} --shell ${shel} --home ${hom} --firstuid ${firstuid} --lastuid ${lastuid} --ingroup ${group} --disabled-password --gecos "${login},,,")
-commande2=(usermod -e ${date_expir} -c '"'"'${description}'"'"' -p ${pass} ${login})
+commande1=(adduser ${login} --home ${hom} --firstuid ${firstuid} --lastuid ${lastuid} --ingroup ${group} --disabled-password --gecos "${login},,,")
+commande2=(usermod -e ${date_expir} -c "'${description}'" -p "${HASH}" ${login})
 
 # Validation de la commande
 echo "Les commandes qui vont être exécutées sont :"
